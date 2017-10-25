@@ -76,8 +76,8 @@ Apify.main(async () => {
     return extractUrls(browser, username, href, pageFunction, waitForCssSelector);
   });
   const urls = await Promise.all(allExtractedUrls);
-  await Apify.setValue('ALL_LINKS', urls);
-  log(urls);
+  await Apify.setValue('OUTPUT', urls);
+  log(JSON.stringify(urls, null, 2));
 
   log('Closing browser.');
   await browser.close();

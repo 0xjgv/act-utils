@@ -1,4 +1,3 @@
-// Example input to extract links.
 {
   "baseUrl": "https://www.instagram.com/",
   "pageFunction": "const anchors = Array.from(document.querySelectorAll('._mck9w._gvoze._f2mse')); return anchors.map(anchor => anchor.firstElementChild.getAttribute('href'));",
