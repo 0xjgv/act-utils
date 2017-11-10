@@ -11,33 +11,42 @@ const [dnsLookup, dnsResolve, dnsReverse] = [
 ].map(promisify);
 
 Apify.main(async () => {
-  // Get input of your act
-  const { dns } = await Apify.getValue('INPUT');
-  log(dns);
-
-  const url = new URL(dns);
+  const { url } = await Apify.getValue('INPUT');
+  if (!url) throw Error('No input URL');
   log(url);
 
-  const output = {};
+  const protocol = 'http://';
+  const parsedUrl = `${/http/.test(url) ? '' : protocol}${url}`;
+  log(parsedUrl);
+
+  const urlObject = new URL(parsedUrl);
+  log(urlObject, urlObject.host);
+
+  const output = { origin: urlObject.origin };
+
+  let shouldTryReverse = true;
   try {
     Object.assign(output, {
-      hostIp: await dnsLookup(url),
-      hostResolve: await dnsResolve(url),
+      hostIp: await dnsLookup(urlObject.host),
+      hostResolve: await dnsResolve(urlObject.host),
     });
   } catch (error) {
     log(error.message);
     Object.assign(output, { error: error.message });
+    shouldTryReverse = false;
   }
 
-  try {
-    Object.assign(output, {
-      hostReverse: await dnsReverse(output.hostIp.address),
-    });
-  } catch (error) {
-    log('Error DNS Reverse', error.message);
+  if (shouldTryReverse) {
+    try {
+      Object.assign(output, {
+        hostReverse: await dnsReverse(output.hostIp.address),
+      });
+    } catch (error) {
+      log('Error DNS Reverse', error.message);
+    }
   }
 
-  log('My output:');
+  log('Output result:');
   dir(output);
   await Apify.setValue('OUTPUT', output);
 });
