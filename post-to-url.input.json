@@ -5,10 +5,7 @@
       "baseUrl": "https://twitter.com/",
       "pageFunction": "const tweets = Array.from(document.querySelectorAll('.tweet')); return tweets.map(tweet => tweet.dataset.permalinkPath);",
       "waitForCssSelector": ".tweet",
-      "usernames": [
-        "chrissanders88",
-        "DidierStevens"
-      ]
+      "usernames": [ "chrissanders88", "DidierStevens" ]
     }
   },
   "instagramCrawlInput": {
@@ -17,11 +14,7 @@
       "baseUrl": "https://www.instagram.com/",
       "pageFunction": "const anchors = Array.from(document.querySelectorAll('._mck9w._gvoze._f2mse')); return anchors.map(anchor => anchor.firstElementChild.getAttribute('href'));",
       "waitForCssSelector": "._mck9w._gvoze._f2mse",
-      "usernames": [
-        "mcuban",
-        "lewishowes",
-        "garyvee"
-      ]
+      "usernames": [ "mcuban", "lewishowes", "garyvee" ]
     }
   },
   "urlToPOST": "https://prod-11.westus2.logic.azure.com:443/workflows/db793895c6424cab82ca3a8d2f77a196/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RLfccv06tEr352Kehwsqv2WGZw5HqrTYQ1re7ayt71Y"
