@@ -11,24 +11,27 @@ const [dnsLookup, dnsResolve, dnsReverse] = [
 ].map(promisify);
 
 Apify.main(async () => {
-  const { url } = await Apify.getValue('INPUT');
+  const input = await Apify.getValue('INPUT');
+  log(input);
+
+  const { url } = input;
   if (!url) throw Error('No input URL');
-  log(url);
+  log('Input URL:', url);
 
   const protocol = 'http://';
   const parsedUrl = `${/http/.test(url) ? '' : protocol}${url}`;
-  log(parsedUrl);
 
-  const urlObject = new URL(parsedUrl);
-  log(urlObject, urlObject.host);
+  const { host, origin } = new URL(parsedUrl);
+  log('URL host:', host);
+  log('URL origin:', origin);
 
-  const output = { origin: urlObject.origin };
+  const output = { origin, host };
 
   let shouldTryReverse = true;
   try {
     Object.assign(output, {
-      hostIp: await dnsLookup(urlObject.host),
-      hostResolve: await dnsResolve(urlObject.host),
+      hostIp: await dnsLookup(host),
+      hostResolve: await dnsResolve(host),
     });
   } catch (error) {
     log(error.message);
