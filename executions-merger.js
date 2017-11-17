@@ -20,6 +20,7 @@ async function getExecutionResults(execId) {
   }, []);
 }
 
+// k-b (Knowledge-Base)
 function getInSequence(items, asyncFunction) {
   return items.reduce((previous, item) => (
     previous.then(accumulator => (
