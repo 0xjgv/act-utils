@@ -9,17 +9,14 @@ async function getExecution(executionId, limit, offset) {
   });
 }
 
+// To-do: Divide requests in chunks - maxLimit 200/request.
 async function getExecutionResults(execId) {
   const { items } = await getExecution(execId);
   console.log(`Execution Results for ${execId}: ${items.length}`);
-  return items.reduce((acc, { pageFunctionResult: result }) => {
-    if (result) {
-      acc.push(result);
-    }
-    return acc;
-  }, []);
+  return items.filter(({ pageFunctionResult: result }) => !!(result));
 }
 
+// good practice @kb
 function getInSequence(items, asyncFunction) {
   return items.reduce((previous, item) => (
     previous.then(accumulator => (
@@ -37,7 +34,6 @@ async function getAllExecutionResults(execIds, inSequence = false) {
       console.log(`Error getAllExecutionResults: ${error}`);
     }
   }
-
   console.log('Getting Execution Results in Parallel...');
   const execPromises = execIds.map(getExecutionResults);
   const allResults = await Promise.all(execPromises);
@@ -49,8 +45,8 @@ Apify.main(async () => {
   if (!executionIds) {
     throw new Error('ERROR: Missing "executionIds" attribute in INPUT');
   }
-
   const results = await getAllExecutionResults(executionIds, inSequence);
   console.log(`All Execution Results: ${results.length}`);
+
   await Apify.setValue('OUTPUT', results);
 });
