@@ -1,7 +1,5 @@
-// Link Extractor.
 const { URL } = require('url');
 const Apify = require('apify');
-const puppeteer = require('puppeteer');
 const { typeCheck } = require('type-check');
 
 const { log, dir } = console;
@@ -25,7 +23,14 @@ async function extractUrls(browser, username, url, pageFunc, cssSelector) {
   try {
     page = await browser.newPage();
     log(`New browser page for: ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle' });
+
+    const response = await page.goto(url, { waitUntil: 'networkidle2' });
+    if (!/^2\d{2}$/.test(response.status)) {
+      log('Response:', response.status);
+      return Object.assign({}, result, {
+        errorMessage: `${url} responded ${response.status}. Verify the username.`,
+      });
+    }
     await page.waitForSelector(cssSelector);
 
     const postsUrls = await page.evaluate((fn) => {
@@ -46,7 +51,10 @@ async function extractUrls(browser, username, url, pageFunc, cssSelector) {
 }
 
 Apify.main(async () => {
-  const input = await Apify.getValue('INPUT');
+  let input = await Apify.getValue('INPUT');
+  if (typeof input === 'string') {
+    input = JSON.parse(input);
+  }
   log(input);
   if (!typeCheck(INPUT_TYPE, input)) {
     log('Expected input:');
@@ -64,10 +72,7 @@ Apify.main(async () => {
   log(baseUrl, usernames);
 
   log('Openning browser...');
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox'],
-    headless: !!process.env.APIFY_HEADLESS,
-  });
+  const browser = await Apify.launchPuppeteer();
   log('New browser window.');
 
   parseUrl = parseUrlFor(baseUrl);
