@@ -1,7 +1,9 @@
 const Apify = require('apify');
 
+const { log } = console;
+
 async function getExecution(executionId, limit, offset) {
-  console.log(`Getting Execution Result: ${executionId}`);
+  log(`Getting Execution Result: ${executionId}`);
   return Apify.client.crawlers.getExecutionResults({
     executionId,
     limit,
@@ -12,11 +14,10 @@ async function getExecution(executionId, limit, offset) {
 // To-do: Divide requests in chunks - maxLimit 200/request.
 async function getExecutionResults(execId) {
   const { items } = await getExecution(execId);
-  console.log(`Execution Results for ${execId}: ${items.length}`);
+  log(`Execution Results for ${execId}: ${items.length}`);
   return items.filter(({ pageFunctionResult: result }) => !!(result));
 }
 
-// k-b (Knowledge-Base)
 function getInSequence(items, asyncFunction) {
   return items.reduce((previous, item) => (
     previous.then(accumulator => (
@@ -27,14 +28,14 @@ function getInSequence(items, asyncFunction) {
 
 async function getAllExecutionResults(execIds, inSequence = false) {
   if (inSequence) {
-    console.log('Getting Execution Results in Sequence...');
+    log('Getting Execution Results in Sequence...');
     try {
       return getInSequence(execIds, getExecutionResults);
     } catch (error) {
-      console.log(`Error getAllExecutionResults: ${error}`);
+      log(`Error getAllExecutionResults: ${error}`);
     }
   }
-  console.log('Getting Execution Results in Parallel...');
+  log('Getting Execution Results in Parallel...');
   const execPromises = execIds.map(getExecutionResults);
   const allResults = await Promise.all(execPromises);
   return allResults.reduce((prev, cur) => [...prev, ...cur]);
@@ -46,7 +47,7 @@ Apify.main(async () => {
     throw new Error('ERROR: Missing "executionIds" attribute in INPUT');
   }
   const results = await getAllExecutionResults(executionIds, inSequence);
-  console.log(`All Execution Results: ${results.length}`);
+  log(`All Execution Results: ${results.length}`);
 
   await Apify.setValue('OUTPUT', results);
 });
