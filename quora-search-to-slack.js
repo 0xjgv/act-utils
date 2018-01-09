@@ -11,7 +11,7 @@ function queryPage(page) {
       results.map((el) => {
         const element = el.querySelector('.question_link');
         return `- <${element.href}|${element.innerText}>`;
-      }).join('\n')
+      }).filter((cur, i, arr) => arr.indexOf(cur) === i).join('\n')
     ));
     return questions ? { title: `search: ${formatSearch}`, text: questions } : '';
   };
@@ -46,11 +46,10 @@ Apify.main(async () => {
   const querySearch = queryPage(page);
   const results = await getInSequence(searchStrings, querySearch, page);
 
-  // Send results to slack
   if (results.length) {
     const bot = new Slack({ token: process.env.SLACK_BOT_TOKEN });
     await bot.chat.postMessage({
-      channel: 'C5RMPH401',
+      channel: '#support',
       response_type: 'in_channel',
       text: 'Interesting Quora questions:',
       attachments: results,
