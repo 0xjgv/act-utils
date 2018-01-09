@@ -29,7 +29,7 @@ Apify.main(async () => {
 
   const results = items.reduce((acc, { pageFunctionResult }) => (
     acc.concat(pageFunctionResult)
-  ), []).filter((cur, i, arr) => arr.indexOf(cur) === i);
+  ), []).filter((cur, i, arr) => cur && arr.indexOf(cur) === i);
   console.log('Last execution results:', results.length);
 
   const nextState = previousState.concat(results);
