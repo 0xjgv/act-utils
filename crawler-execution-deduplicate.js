@@ -1,7 +1,5 @@
 const Apify = require('apify');
 
-const pretty = object => JSON.stringify(object, null, 2);
-
 Apify.main(async () => {
   const input = await Apify.getValue('INPUT');
   console.log('My input:');
@@ -10,13 +8,10 @@ Apify.main(async () => {
   if (!input) {
     throw new Error('Input and input.data are required!');
   }
-  const {
-    _id: executionId,
-    actId: crawlerId,
-  } = input;
+  const { _id: executionId, actId: crawlerId } = input;
+  const storeName = crawlerId;
 
   const { keyValueStores, crawlers } = Apify.client;
-  const storeName = crawlerId;
   const storeRequest = keyValueStores.getOrCreateStore({ storeName });
   const crawlerRequest = crawlers.getLastExecutionResults({ executionId, crawlerId });
   const [{ id: storeId }, { items }] = await Promise.all([storeRequest, crawlerRequest]);
@@ -37,6 +32,6 @@ Apify.main(async () => {
   console.log('Saving into keyValueStore:', storeName);
   await keyValueStores.putRecord({
     key: 'STATE',
-    body: pretty(nextState),
+    body: JSON.stringify(nextState, null, 2),
   });
 });
