@@ -13,20 +13,21 @@ Apify.main(async () => {
   const {
     data: storeName,
     _id: executionId,
-    actId: crawlerId,
+    actId: crawlerId
   } = input;
 
   const output = {
     crawledAt: new Date(),
     saveAt: storeName,
-    input,
+    input
   };
   const setValueRequest = Apify.setValue('OUTPUT', output);
 
   const { keyValueStores, crawlers } = Apify.client;
   const storeRequest = keyValueStores.getOrCreateStore({ storeName });
   const crawlerRequest = crawlers.getLastExecutionResults({ executionId, crawlerId });
-  const [{ id: storeId }, { items }] = await Promise.all([storeRequest, crawlerRequest]);
+  const [{ id: storeId }, crawlerResults] = await Promise.all([storeRequest, crawlerRequest]);
+  const items = crawlerResults.items || [];
   Apify.client.setOptions({ storeId });
 
   const record = await keyValueStores.getRecord({ key: 'STATE' });
@@ -34,17 +35,28 @@ Apify.main(async () => {
   const previousState = typeof storeRecord === 'string' ? JSON.parse(storeRecord) : storeRecord;
   console.log('Previous STATE results:', previousState.length);
 
-  const results = items.reduce((acc, { pageFunctionResult }) => (
-    acc.concat(pageFunctionResult)
-  ), []);
-  console.log('Last execution results:', results.length);
+  // Get the unique id
+  const [firstItem] = previousState || [{}];
+  const uniqueId = Object.keys(firstItem).find(key => /id/i.test(key));
 
-  const nextState = previousState.concat(results);
+  const results = items.map(({ pageFunctionResult }) => pageFunctionResult);
+  console.log('Last execution results:', results.slice(0, 3));
+
+  const memo = {};
+  const nextState = previousState.concat(results).reduce((all, result) => {
+    const key = result[uniqueId];
+    if (memo[key]) {
+      return all;
+    }
+    memo[key] = true;
+    return all.concat(result);
+  }, []);
+  console.log('Next STATE unique results:', nextState.length);
 
   console.log('Saving into keyValueStore:', storeName);
   await keyValueStores.putRecord({
     key: 'STATE',
-    body: pretty(nextState),
+    body: pretty(nextState)
   });
 
   console.log('My output:');
